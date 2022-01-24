@@ -1,0 +1,57 @@
+service: ignitechalange
+frameworkVersion: '2'
+
+
+plugins: 
+  - serverless-webpack
+  # - serverless-s3-sync
+
+
+package:
+  include: 
+    - src/**
+    - .env
+
+
+provider: 
+  name: aws
+  runtime: nodejs14.x
+  region: sa-east-1
+  lambdaHashingVersion: 20201221
+  stage: dev
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action: 
+            - "dynamodb:*"
+          Resource: "*"
+
+resources: 
+  Resources:
+    todosTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: todosTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+
+
+
+
+functions:
+  createTodo:
+    handler: src/functions/createTodo.handle
+    events:
+      - httpApi: 'POST /todo/{id}'
+  getTodo:
+    handler: src/functions/getTodo.handle
+    events:
+      - httpApi: 'GET /todo/{id}'  
